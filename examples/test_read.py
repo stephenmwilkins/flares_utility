@@ -21,7 +21,7 @@ print(a.deltas) # print delta
 # ----------------------------------------------------------------------
 # --- define parameters and tag
 
-tag = a.tags[0] # get last (lowest redshift) tag
+tag = a.tags[-1] # get last (lowest redshift) tag
 z = a.zed_from_tag[tag] # get redshift of that tag
 print(tag, z, a.tag_from_zed[z]) # print, but also shows how to the tag from zed
 
@@ -48,4 +48,4 @@ P = a.get_particle_datasets(tag)
 
 print(P.keys()) # print the quantities we've extracted
 print(len(P['S_Age'])) # print the number of galaxes
-print(P['S_Age'][0])
+print(P['S_Age'][0]) # print the ages of the star particles in the first galaxy

@@ -7,10 +7,13 @@ import matplotlib as mpl
 
 import cmasher as cmr
 
-import flares
-import flares_analysis as fa
-
 import h5py
+
+from flares_utility import analyse
+
+import flare.plt
+
+
 
 
 Mstar_limits = [8., 11]
@@ -34,7 +37,7 @@ snap['FLARES'] = {5:'010_z005p000',6: '009_z006p000',7:'008_z007p000',8:'007_z00
 
 EAGLE = h5py.File('/Users/stephenwilkins/Dropbox/Research/data/simulations/FLARES/EAGLE_REF_sp_info.hdf5', 'r')
 
-fl = flares.flares('/Users/stephenwilkins/Dropbox/Research/data/simulations/FLARES/flares_no_particlesed.hdf5', sim_type='FLARES')
+fl = analyse.analyse('/Users/stephenwilkins/Dropbox/Research/data/simulations/FLARES/flares_no_particlesed.hdf5')
 
 quantities = [{'path': 'Galaxy', 'dataset': 'Mstar_30', 'name': None, 'log10': True}]
 
@@ -49,7 +52,7 @@ for sim, ls in zip(['EAGLE','FLARES'],[':','-']):
             label = None
 
         if sim == 'FLARES':
-            D = fa.get_datasets(fl, snap['FLARES'][z], quantities, return_weights = False)
+            D = fl.get_datasets(snap['FLARES'][z], quantities, return_weights = False)
             log10Mstar = D['log10Mstar_30']
             label = rf'$\rm z={z}$'
 

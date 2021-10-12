@@ -30,7 +30,7 @@ D = a.get_datasets(a.tag_from_zed[z], quantities)
 
 # ----------------------------------------------
 # define new quantities
-D['log10sSFR'] = np.log10(D['SFR'])-np.log10(D['Mstar'])+9
+D['log10sSFR'] = D['log10SFR'])-D['log10Mstar'])+9 # +9 converts to Gyr
 
 # ----------------------------------------------
 # define selection

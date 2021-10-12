@@ -13,10 +13,7 @@ from astropy.cosmology import Planck15 as cosmo
 import flare.plt as fplt
 import flare.photom as phot
 
-import flares
-import flares_analysis as fa
-
-import h5py
+import flares_utility.analyse as analyse
 
 
 
@@ -91,36 +88,30 @@ for l, ls in zip([100, 250], ['--','-.']):
 
 # --- FLARES
 
-fl = flares.flares('/Users/stephenwilkins/Dropbox/Research/data/simulations/FLARES/flares_no_particlesed.hdf5', sim_type='FLARES')
 
-snap = {5:'010_z005p000',6: '009_z006p000',7:'008_z007p000',8:'007_z008p000',9:'006_z009p000',10:'005_z010p000'}
 
-dat = np.loadtxt('/Users/stephenwilkins/Dropbox/Research/modules/flares/weight_files/weights_grid.txt', skiprows=1, delimiter=',')
-weights = dat[:,8]
-index = dat[:,0]
+flares = analyse.analyse('/Users/stephenwilkins/Dropbox/Research/data/simulations/FLARES/flares_no_particlesed.hdf5', default_tags = False)
 
-X = fl.load_dataset('FUV',arr_type='Galaxy/BPASS_2.2.1/Chabrier300/Luminosity/DustModelI')
+# flares.list_datasets()
 
-R = 14./0.6777 # Mpc
-V = (4./3) * np.pi * (R)**3 # Mpc^3
+V = (4./3) * np.pi * (flares.radius)**3 # Mpc^3
 
-for z, c in zip(redshifts, cmr.take_cmap_colors('cmr.gem_r', len(redshifts))):
+
+for z, tag, c in zip(flares.zeds, flares.tags, cmr.take_cmap_colors('cmr.gem_r', len(flares.zeds))):
 
     ## ---- get data
     phi = np.zeros(len(bin_centres))
     N = np.zeros(len(bin_centres))
     V_total = 0.
 
-    for i,halo in enumerate(fl.halos):
+    X = flares.load_dataset(tag, 'Galaxy/BPASS_2.2.1/Chabrier300/Luminosity/DustModelI/', 'FUV')
 
-        w = weights[np.where(["%02d"%i == halo for i in index])[0]]
+    for i, (sim, w) in enumerate(zip(flares.sims, flares.weights)):
 
-        x = X[halo][snap[z]]
+        x = np.log10(np.array(X[sim]))
         x = x[x>0.0]
 
-        V_total += V
-
-        N_temp, _ = np.histogram(np.log10(x), bins = bin_edges)
+        N_temp, _ = np.histogram(x, bins = bin_edges)
 
         N += N_temp
 
@@ -128,13 +119,9 @@ for z, c in zip(redshifts, cmr.take_cmap_colors('cmr.gem_r', len(redshifts))):
 
         phi += phi_temp * w
 
-
     V_eff = N/(phi*binw)
 
     ax.plot(bin_centres, np.log10(V_eff), ls = '-', c=c, label = rf'$\rm z={z}$')
-
-
-
 
 
 ax.legend(loc='upper left', fontsize=7, labelspacing=0.05, title=r'$\rm\bf FLARES-1$')

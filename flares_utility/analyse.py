@@ -25,6 +25,10 @@ scalings['Mstar'] = 1E10
 scalings['BH_Mass'] = 1E10
 scalings['age'] = 1000 # Gyr -> Myr
 
+scalings['S_Mass'] = 1E10
+scalings['S_MassInitial'] = 1E10
+scalings['S_Age'] = 1000 # Gyr -> Myr
+
 # converting MBHacc units to M_sol/yr
 h = 0.6777  # Hubble parameter
 BH_Mdot_scaling = h * 6.445909132449984E23  # g/s
@@ -41,7 +45,7 @@ class analyse:
 
         self.fname =fname
 
-        self.radius = 14. # cMpc/h
+        self.radius = 14./h # cMpc
         self.x, self.y, self.z, self.deltas, self.sigmas, self.weights = np.loadtxt(this_dir+'/data/weights_grid.txt', skiprows=1, unpack = True, usecols = (2,3,4,6,7,8), delimiter=',')
 
         self.ids = np.array(['00','01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39'])
@@ -169,19 +173,24 @@ class analyse:
         return out
 
 
-    def get_particle_datasets(self, tag, quantities = ['S_Age', 'S_Mass', 'S_MassInitial', 'S_Z']):
+    def get_particle_datasets(self, tag, quantities = ['S_Age', 'S_Mass', 'S_MassInitial', 'S_Z'], apply_scalings = True):
 
         P = {}
 
-        for q in quantities:
-            P[q] = []
+        for qid in quantities:
+            P[qid] = []
 
         for ii, sim in enumerate(self.ids):
-            for q in quantities:
-                P[q] += self.load_particles(sim, tag, q, return_dict = False)
+            for qid in quantities:
 
-        # for q in quantities:
-        #     P[q] = np.array(P[q])
+                p = self.load_particles(sim, tag, qid, return_dict = False)
+
+                if apply_scalings and (qid in list(scalings.keys())):
+                    for iii, p_ in enumerate(p):
+                        p[iii] = p_*scalings[qid]
+
+                P[qid] += p
+
 
         # D['pweight'] = []
         # for v,w in zip(D[ks[0]],D['weight']):

@@ -16,5 +16,6 @@ setup(
     author_email='s.wilkins@sussex.ac.uk',
     url='https://github.com/stephenmwilkins/flares_utility',
     # license=license,
-    packages=find_packages(exclude=('examples', 'useful_plots', 'master_file_scripts'))
+    packages=find_packages(exclude=('examples', 'useful_plots', 'master_file_scripts')),
+    package_data={'flares_utility': ['data/*']}
 )
