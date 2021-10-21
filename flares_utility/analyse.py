@@ -11,20 +11,18 @@ this_dir, this_filename = os.path.split(__file__)
 
 
 
-# --- object for containing information about the simulations
-
-class empty: pass
-sims = empty()
-
+# --- apertures and averaging timescales
+apertures = [1, 3, 5, 10, 30, 50, 100]
+averaging_timescales = [1,5,10,20,40,50,100,200]
 
 
 # --- default scalings to the units specified in labels.py
-
 scalings = {}
 scalings['Mstar'] = 1E10
+for aperture in apertures:
+    scalings[f'Mstar_{aperture}'] = 1E10
 scalings['BH_Mass'] = 1E10
 scalings['age'] = 1000 # Gyr -> Myr
-
 scalings['S_Mass'] = 1E10
 scalings['S_MassInitial'] = 1E10
 scalings['S_Age'] = 1000 # Gyr -> Myr
@@ -62,8 +60,8 @@ class analyse_flares:
         self.zed_from_tag = {key:item for key, item in zip(self.tags, self.zeds)} # get redshift from tag
         self.tag_from_zed = {key:item for item, key in zip(self.tags, self.zeds)} # get tag from redshift
 
-        self.apertures = [1, 3, 5, 10, 30, 50, 100]
-        self.averaging_timescales = [1,5,10,20,40,50,100,200]
+        self.apertures = apertures
+        self.averaging_timescales = averaging_timescales
 
 
     def list_datasets(self):
