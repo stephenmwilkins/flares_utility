@@ -39,7 +39,7 @@ scalings['BH_Mdot'] = BH_Mdot_scaling
 
 
 
-class analyse:
+class analyse_flares:
 
     def __init__(self, fname, default_tags = True):
 
@@ -62,6 +62,8 @@ class analyse:
         self.zed_from_tag = {key:item for key, item in zip(self.tags, self.zeds)} # get redshift from tag
         self.tag_from_zed = {key:item for item, key in zip(self.tags, self.zeds)} # get tag from redshift
 
+        self.apertures = [1, 3, 5, 10, 30, 50, 100]
+        self.averaging_timescales = [1,5,10,20,40,50,100,200]
 
 
     def list_datasets(self):
@@ -134,15 +136,6 @@ class analyse:
         return D
 
 
-
-
-
-
-
-
-
-
-
     def load_particles(self, sim, tag, q, return_dict = True):
 
         length_array = self.load_single_dataset(sim, tag, 'Galaxy', q[0]+'_Length')
@@ -198,3 +191,6 @@ class analyse:
         # D['pweight'] = np.array(D['pweight'])
 
         return P
+
+
+analyse = analyse_flares
