@@ -48,7 +48,8 @@ limits['log10SFR10/50'] = [-0.9,0.9]
 limits['log10SFRinst/10'] = [-0.9,0.9]
 
 
-limits['log10lambda'] = [0.21, 1.49]
+# limits['log10lambda'] = [0.21, 1.49]
+limits['log10lambda'] = np.array([0.21, 1.49])-3 # Myr
 limits['nvariance'] = [0., 2.9]
 limits['skew'] = [-1.9, 3.9]
 limits['nkurtosis'] = [-1.9, 19]
