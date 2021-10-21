@@ -59,3 +59,20 @@ def binned_weighted_quantile(x,y,weights,bins,quantiles):
             out[i,:] = weighted_quantile(y[mask],quantiles,sample_weight=weights[mask])
 
     return np.squeeze(out)
+
+
+
+def n_weighted_moment(values, weights, n):
+
+    assert n>0 & (values.shape == weights.shape)
+    w_avg = np.average(values, weights = weights)
+    w_var = np.sum(weights * (values - w_avg)**2)/np.sum(weights)
+
+    if n==1:
+        return w_avg
+    elif n==2:
+        return w_var
+    else:
+        w_std = np.sqrt(w_var)
+        return np.sum(weights * ((values - w_avg)/w_std)**n)/np.sum(weights)
+              #Same as np.average(((values - w_avg)/w_std)**n, weights=weights)
