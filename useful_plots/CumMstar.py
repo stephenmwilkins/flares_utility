@@ -53,7 +53,8 @@ for sim, ls in zip(['EAGLE','FLARES'],[':','-']):
 
         if sim == 'FLARES':
             D = fl.get_datasets(snap['FLARES'][z], quantities, return_weights = False)
-            log10Mstar = D['log10Mstar_30']
+            log10Mstar = D['log10Mstar_30']+10
+            print(np.min(log10Mstar), np.max(log10Mstar))
             label = rf'$\rm z={z}$'
 
         N = []
@@ -62,6 +63,9 @@ for sim, ls in zip(['EAGLE','FLARES'],[':','-']):
 
         for log10Mlimit in M:
             N.append(np.log10(len(log10Mstar[log10Mstar>log10Mlimit])))
+
+        print(M,N)
+
 
         ax.plot(M, N, ls = ls, c=c, label = label)
 

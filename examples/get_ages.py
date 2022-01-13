@@ -15,23 +15,12 @@ filename = '/Users/stephenwilkins/Dropbox/Research/data/simulations/flares/flare
 
 a = analyse.analyse(filename, default_tags = False)
 
-# print(a.ids) # print simulation ids
-# print(a.tags) # print tag/snapshot ids
-# print(a.zeds) # print corresponding redshifts
-# print(a.deltas) # print delta
 
 
 # ----------------------------------------------------------------------
 # --- define parameters and tag
 
 tag = a.tags[0] # get first (highest redshift) tag
-z = a.zed_from_tag[tag] # get redshift of that tag
-print(tag, z, a.tag_from_zed[z]) # print, but also shows how to the tag from zed
-
-
-# ----------------------------------------------------------------------
-# --- list datasets (specifically for the 1st sim/tag)
-# a.list_datasets()
 
 
 # ----------------------------------------------------------------------
