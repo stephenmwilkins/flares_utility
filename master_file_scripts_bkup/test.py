@@ -1,8 +1,8 @@
 
 import h5py
 
-# f = '/cosma7/data/dp004/dc-love2/codes/flares/data/flares.hdf5' # current cosma main version
-f = '/Users/stephenwilkins/Dropbox/Research/data/simulations/flares/flares_highz.hdf5'
+f = '/cosma7/data/dp004/dc-love2/codes/flares/data/flares.hdf5' # current cosma main version
+# f = '/Users/stephenwilkins/Dropbox/Research/data/simulations/flares/flares_highz.hdf5'
 
 
 x1 = 'Galaxy/Mstar'

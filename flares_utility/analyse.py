@@ -10,6 +10,9 @@ import os
 this_dir, this_filename = os.path.split(__file__)
 
 
+flares_master_file = os.environ['FLARES_MASTER']
+# FLARES_MASTER=/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5
+
 
 # --- apertures and averaging timescales
 apertures = [1, 3, 5, 10, 30, 50, 100]
