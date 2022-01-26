@@ -8,18 +8,17 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flares_utility import analyse
 
-z = 10
+z = 11
 
-filename = '/Users/stephenwilkins/Dropbox/Research/data/simulations/flares/flares_highz.hdf5'
+filename = analyse.flares_master_file+'/flares_highz_v3_nosed.hdf5' # if you don't have an environment variable set you need to give this the full path to the master file instead
 
 a = analyse.analyse(filename, default_tags = False)
-
 
 # ----------------------------------------------------------------------
 # --- define quantities to read in [not those for the corner plot, that's done later]
 
 quantities = []
-quantities.append({'path': 'Galaxy/SFR_total', 'dataset': 'SFR_100_Myr', 'name': 'SFR', 'log10': True}) # SFR averaged over 100 Myr
+quantities.append({'path': 'Galaxy/SFR', 'dataset': '100Myr', 'name': 'SFR', 'log10': True}) # SFR averaged over 100 Myr
 quantities.append({'path': 'Galaxy', 'dataset': 'Mstar', 'name': None, 'log10': True}) # Stellar mass
 
 
@@ -30,7 +29,7 @@ D = a.get_datasets(a.tag_from_zed[z], quantities)
 
 # ----------------------------------------------
 # define new quantities
-D['log10sSFR'] = D['log10SFR'])-D['log10Mstar'])+9 # +9 converts to Gyr
+D['log10sSFR'] = D['log10SFR']-D['log10Mstar']+9 # +9 converts to Gyr
 
 # ----------------------------------------------
 # define selection

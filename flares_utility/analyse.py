@@ -18,8 +18,10 @@ cosmo = WMAP9
 
 
 
-
-flares_master_file = os.environ['FLARES_MASTER']
+try:
+    flares_master_file = os.environ['FLARES_MASTER']
+except:
+    print('no FLARES_MASTER environment variable set')
 # FLARES_MASTER=/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5
 
 

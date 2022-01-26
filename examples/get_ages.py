@@ -8,10 +8,12 @@ import numpy as np
 import sys
 import os
 
+# --- this is necessary if the module isn't "installed" or in the PythonPath
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from flares_utility import analyse
 
-filename = '/Users/stephenwilkins/Dropbox/Research/data/simulations/flares/flares_highz.hdf5'
+filename = analyse.flares_master_file+'/flares_highz_v3_nosed.hdf5' # if you don't have an environment variable set you need to give this the full path to the master file instead
 
 a = analyse.analyse(filename, default_tags = False)
 
