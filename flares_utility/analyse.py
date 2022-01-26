@@ -10,6 +10,15 @@ import os
 this_dir, this_filename = os.path.split(__file__)
 
 
+print('initialised cosmology')
+
+from astropy.cosmology import WMAP9
+
+cosmo = WMAP9
+
+
+
+
 flares_master_file = os.environ['FLARES_MASTER']
 # FLARES_MASTER=/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5
 
@@ -22,6 +31,7 @@ averaging_timescales = [1,5,10,20,40,50,100,200]
 # --- default scalings to the units specified in labels.py
 scalings = {}
 scalings['Mstar'] = 1E10
+scalings['Mstar_total'] = 1E10
 for aperture in apertures:
     scalings[f'Mstar_{aperture}'] = 1E10
 scalings['BH_Mass'] = 1E10
@@ -57,6 +67,9 @@ class analyse_flares:
         else:
             with h5py.File(self.fname,'r') as f:
                 self.tags = list(f['00'].keys())
+                self.tags.pop() # get rid of header entry
+
+
 
         self.zeds = np.array([float(tag[5:].replace('p','.')) for tag in self.tags])
 
@@ -167,7 +180,38 @@ class analyse_flares:
         return out
 
 
-    def get_particle_datasets(self, tag, quantities = ['S_Age', 'S_Mass', 'S_MassInitial', 'S_Z'], apply_scalings = True):
+    def load_aperture_mask(self, sim, tag, particle_type = 'Star', aperture = '30', return_dict = True):
+
+        length_array = self.load_single_dataset(sim, tag, 'Galaxy', particle_type[0]+'_Length')
+
+        # find beginning:end indexes for each galaxy
+
+        begin = np.zeros(len(length_array), dtype = np.int64)
+        end = np.zeros(len(length_array), dtype = np.int64)
+        begin[1:] = np.cumsum(length_array)[:-1]
+        end = np.cumsum(length_array)
+
+
+        d = self.load_single_dataset(sim, tag, 'Particle', f'Apertures/{particle_type}/{aperture}')
+
+        if return_dict: # return a dictionary of arrays where the key is the galaxy index
+            out = {}
+            for i in np.arange(len(length_array)): # loop through gals
+                out[i] =  d[begin[i]:end[i]]
+
+        else: # otherwise return a list of array
+            out = []
+            for i in np.arange(len(length_array)): # loop through gals
+                out.append(d[begin[i]:end[i]])
+
+        # print(out)
+        # print(len(out))
+        return out
+
+
+
+
+    def get_particle_datasets(self, tag, quantities = ['S_Age', 'S_Mass', 'S_MassInitial', 'S_Z'], aperture = '30', apply_scalings = True):
 
         P = {}
 
@@ -175,15 +219,27 @@ class analyse_flares:
             P[qid] = []
 
         for ii, sim in enumerate(self.ids):
+
+            if aperture:
+                s = self.load_aperture_mask(sim, tag, aperture = aperture, return_dict = False)
+
             for qid in quantities:
 
                 p = self.load_particles(sim, tag, qid, return_dict = False)
+
+                if aperture:
+                    for iii, p_ in enumerate(p):
+                        p[iii] = p_[s[iii]]
 
                 if apply_scalings and (qid in list(scalings.keys())):
                     for iii, p_ in enumerate(p):
                         p[iii] = p_*scalings[qid]
 
                 P[qid] += p
+
+
+
+
 
 
         # D['pweight'] = []

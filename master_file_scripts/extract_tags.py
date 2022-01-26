@@ -12,8 +12,9 @@ import flares
 
 # in_file = '/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5' # Aswin's version
 in_file = '/cosma7/data/dp004/dc-love2/codes/flares/data/flares.hdf5' # Chris's version
+in_file = '/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5' #Aswin's newer version
 
-out_file = '/cosma/home/dp004/dc-wilk2/data/flare/simulations/flares/flares_highz_v2.hdf5'
+out_file = '/cosma/home/dp004/dc-wilk2/data/flare/simulations/flares/flares_highz_v3.hdf5'
 
 fl = flares.flares(in_file, sim_type='FLARES')
 
