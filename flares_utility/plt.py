@@ -684,7 +684,7 @@ def linear_redshift(D, zeds, x, y, s, labels = labels, limits = limits, nbins = 
 
 
 
-def linear_redshift_density(D, zeds, x, y, s, labels = labels, limits = limits, rows = 1):
+def linear_redshift_density(D, zeds, x, y, s, labels = labels, limits = limits, rows = 1, nbins = 20):
 
 
     # --- if no limits provided base limits on selected data ranges
@@ -730,13 +730,17 @@ def linear_redshift_density(D, zeds, x, y, s, labels = labels, limits = limits, 
 
     for ax, z in zip(axes, zeds):
 
+        print('-'*10,z)
+
         for ldelta in ldelta_bins:
 
             sd = s[z]&(np.fabs(D[z]['ldelta']-ldelta)<0.05)
 
+            print(ldelta, len(sd[sd]))
+
             # --- weighted median Lines
 
-            bins = np.linspace(*limits[x], 20)
+            bins = np.linspace(*limits[x], nbins)
             bincen = (bins[:-1]+bins[1:])/2.
             out = stats.binned_weighted_quantile(D[z][x][sd],D[z][y][sd], D[z]['weight'][sd],bins,[0.84,0.50,0.16])
 
