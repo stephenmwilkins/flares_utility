@@ -48,7 +48,7 @@ V = (4./3) * np.pi * (flares.radius)**3 # Mpc^3
 X_limits = [8., 11] # x-range to consider
 binw = 0.25
 bin_edges = np.arange(*X_limits, binw)
-bin_centres = bin_edges[:-1]+binw/0.5
+bin_centres = bin_edges[:-1]+binw/2
 
 # --- make empty arrays
 phi = np.zeros(len(bin_centres)) # \phi - the number of galaxies per unit volume

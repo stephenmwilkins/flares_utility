@@ -39,7 +39,7 @@ redshifts = [5,6,7,8,9,10]
 
 binw = 0.1
 bin_edges = np.arange(*X_limits, binw)
-bin_centres = bin_edges[:-1]+binw/0.5
+bin_centres = bin_edges[:-1]+binw/2
 
 
 
