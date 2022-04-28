@@ -38,6 +38,7 @@ for aperture in apertures:
     scalings[f'Mstar_{aperture}'] = 1E10
 scalings['BH_Mass'] = 1E10
 scalings['age'] = 1000 # Gyr -> Myr
+scalings['MassWeightedStellarAge'] = scalings['age'] # Gyr -> Myr
 scalings['S_Mass'] = 1E10
 scalings['S_MassInitial'] = 1E10
 scalings['S_Age'] = 1000 # Gyr -> Myr
@@ -69,7 +70,7 @@ class analyse_flares:
         else:
             with h5py.File(self.fname,'r') as f:
                 self.tags = list(f['00'].keys())
-                self.tags.pop() # get rid of header entry
+                # self.tags.pop() # get rid of header entry
 
 
 

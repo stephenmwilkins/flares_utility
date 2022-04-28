@@ -2,9 +2,14 @@
 
 import matplotlib as mpl
 import matplotlib.cm as cm
+import matplotlib.patheffects as pe
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
+
+
+from scipy.stats import pearsonr
 
 import cmasher as cmr
 
@@ -13,6 +18,7 @@ import flare.plt as fplt
 from . import stats
 from . import limits as limits_
 from . import labels as labels_
+from . import colors as colors_
 
 limits = limits_.limits
 labels = labels_.labels
@@ -20,6 +26,69 @@ labels = labels_.labels
 
 fancy = lambda x: r'$\rm '+x.replace(' ','\ ')+'$'
 ml = lambda x: r'$\rm '+x+'$'
+
+
+default_quantiles = [0.022, 0.158, 0.842, 0.978]
+
+
+def get_bins_N(X, limits = limits, bins = 20):
+
+    # --- if integer number of bins provided decide the bins based on the limits, otherwise assume bin_edges
+    if type(bins) == int:
+        bins = np.linspace(*limits, bins)
+
+    bincen = (bins[:-1]+bins[1:])/2.
+
+    N, _ = np.histogram(X, bins = bins)
+
+    i = np.array(range(len(N)))
+
+    ss = i[N<1]
+    if len(ss)>0:
+        Ncut1 = i[i<ss[0]]
+    else:
+        Ncut1 = i
+
+    ss = i[N<10]
+    if len(ss)>0:
+        Ncut2 = i[i<ss[0]]
+    else:
+        Ncut2 = i
+
+    return N, bins, bincen, Ncut1, Ncut2
+
+
+def weighted_median(ax, X, Y, w, limits = limits, bins = 20, weighted = True, c = 'k', label = None, ls = None, lw = 1):
+
+    N, bins, bincen, Ncut1, Ncut2 = get_bins_N(X, limits = limits, bins = bins)
+
+    if not weighted: w = np.ones(len(X))
+
+    med = stats.binned_weighted_quantile(X, Y, w, bins, [0.5])
+
+    if not ls:
+        ax.plot(bincen[Ncut1], med[Ncut1], c=c, ls = '--', lw = lw) # >1, <10
+        ax.plot(bincen[Ncut2], med[Ncut2], c=c, ls = '-', lw = lw, label = label) # >= 10
+    else:
+        ax.plot(bincen, med, c=c, ls = ls, lw = lw, label = label) # >1, <10
+
+    return bincen[Ncut1], med[Ncut1], bincen[Ncut2], med[Ncut2]
+
+
+def weighted_range(ax, X, Y, w, limits = limits, bins = 20, weighted = True, quantiles = default_quantiles, c = 'k'):
+
+    N, bins, bincen, Ncut1, Ncut2 = get_bins_N(X, limits = limits, bins = bins)
+
+    if not weighted: w = np.ones(len(X))
+
+    P = stats.binned_weighted_quantile(X, Y, w, bins, quantiles)
+
+    if len(quantiles)==2:
+        ax.fill_between(bincen[Ncut2], P[:,0][Ncut2], P[:,-1][Ncut2], color=c, alpha = 0.1)
+    if len(quantiles)==4:
+        ax.fill_between(bincen[Ncut2], P[:,1][Ncut2], P[:,-2][Ncut2], color=c, alpha = 0.1, lw=0)
+        ax.fill_between(bincen[Ncut2], P[:,0][Ncut2], P[:,-1][Ncut2], color=c, alpha = 0.05, lw=0)
+
 
 
 
@@ -143,7 +212,7 @@ def simple_wcbar_connected(D, x, y1, y2, z, s = None, labels = labels, limits = 
 
 
 
-def simple_wcbar_whist(D, x, y, z, s = None, labels = labels, limits = limits,  cmap = cm.viridis, add_weighted_median = True, base_size = 3.5):
+def simple_wcbar_whist(D, x, y, z, s = None, labels = labels, limits = limits,  cmap = cm.viridis, add_weighted_median = True, base_size = 3.5, hist_bins=20):
 
     left  = 0.15
     height = 0.70
@@ -186,23 +255,26 @@ def simple_wcbar_whist(D, x, y, z, s = None, labels = labels, limits = limits,  
 
 
     # --- add histogram
-    bins = np.linspace(*limits[y], 20)
-    bincen = (bins[:-1]+bins[1:])/2.
-    H, bin_edges = np.histogram(D[y][s], bins = bins, range = limits[x], density = True)
-    Hw, bin_edges = np.histogram(D[y][s], bins = bins, range = limits[x], weights = D['weight'][s], density = True)
+    # bins = np.linspace(*limits[y], 20)
+    # bincen = (bins[:-1]+bins[1:])/2.
+    # H, bin_edges = np.histogram(D[y][s], bins = bins, range = limits[x], density = True)
+    # Hw, bin_edges = np.histogram(D[y][s], bins = bins, range = limits[x], weights = D['weight'][s], density = True)
+    #
+    #
+    # X = []
+    # Y = []
+    # bef = 0.0
+    # for i,be in enumerate(bin_edges[:-1]):
+    #     X.append(be)
+    #     Y.append(bef)
+    #     X.append(be)
+    #     Y.append(Hw[i])
+    #     bef = Hw[i]
+    #
+    # hax.plot(Y, X, c='k', ls = '-', lw=1)
 
+    hax.hist(D[y][s], bins=hist_bins, orientation='horizontal', color='k', histtype=u'step', fill=False, density=True)
 
-    X = []
-    Y = []
-    bef = 0.0
-    for i,be in enumerate(bin_edges[:-1]):
-        X.append(be)
-        Y.append(bef)
-        X.append(be)
-        Y.append(Hw[i])
-        bef = Hw[i]
-
-    hax.plot(Y, X, c='k', ls = '-', lw=1)
 
     # hax.plot(H, bincen, c='k', ls = ':', lw=1)
 
@@ -212,7 +284,7 @@ def simple_wcbar_whist(D, x, y, z, s = None, labels = labels, limits = limits,  
 
 
 
-    hax.set_xlim([0,1.2*np.max(Y)])
+    # hax.set_xlim([0,1.2*np.max(Y)])
     hax.set_xticks([])
     hax.set_yticks([])
 
@@ -303,56 +375,56 @@ def simple(D, x, y, s = None, labels = labels, limits = limits, nbins = nbins, a
 
 
 
-def simple_zevo(Dt, x, y, s = None, labels = labels, limits = limits):
-
-    """ redshift evolution of a quantity """
-
-    z = list(Dt.keys())[-1]
-
-    # --- if no limits provided base limits on selected data ranges
-    for v in [x, y]:
-        if v not in limits.keys():
-            limits[v] = [np.min(D[z][v][s[-1]]), np.max(D[z][v][s[-1]])]
-
-    # --- if no labels provided just use the name
-    for v in [x, y]:
-        if v not in labels.keys():
-            labels[v] = v
-
-
-    # --- get template figure from flare.plt
-    fig, ax = fplt.simple()
-
-    norm = mpl.colors.Normalize(vmin=5, vmax=10)
-    cmap = cm.plasma
-
-
-    for z, D in Dt.items():
-
-        c = cmap(norm(z))
-
-        bins = np.linspace(*limits[x], 20)
-        bincen = (bins[:-1]+bins[1:])/2.
-        out = stats.binned_weighted_quantile(D[x][s[z]],D[y][s[z]], D['weight'][s[z]],bins,[0.84,0.50,0.16])
-        N, be = np.histogram(D['log10Mstar_30'][s[z]], bins=bins)
-        # print(len(N), len(out[:,1]))
-
-        s2 = N>10
-
-        ax.plot(bincen, out[:,1], c=c, ls = ':')
-        ax.plot(bincen[s2], out[:,1][s2], c=c, ls = '-', label = rf'$\rm z={z}$')
-        # ax.fill_between(bincen[Ns], out[:,0][Ns], out[:,2][Ns], color='k', alpha = 0.2)
-
-
-    ax.set_xlim(limits[x])
-    ax.set_ylim(limits[y])
-
-    ax.set_ylabel(rf'$\rm {labels[y]}$', fontsize = 9)
-    ax.set_xlabel(rf'$\rm {labels[x]}$', fontsize = 9)
-
-    ax.legend(fontsize=7)
-
-    return fig, ax
+# def simple_zevo(Dt, x, y, s = None, labels = labels, limits = limits):
+#
+#     """ redshift evolution of a quantity """
+#
+#     z = list(Dt.keys())[-1]
+#
+#     # --- if no limits provided base limits on selected data ranges
+#     for v in [x, y]:
+#         if v not in limits.keys():
+#             limits[v] = [np.min(D[z][v][s[-1]]), np.max(D[z][v][s[-1]])]
+#
+#     # --- if no labels provided just use the name
+#     for v in [x, y]:
+#         if v not in labels.keys():
+#             labels[v] = v
+#
+#
+#     # --- get template figure from flare.plt
+#     fig, ax = fplt.simple()
+#
+#     norm = mpl.colors.Normalize(vmin=5, vmax=10)
+#     cmap = cm.plasma
+#
+#
+#     for z, D in Dt.items():
+#
+#         c = cmap(norm(z))
+#
+#         bins = np.linspace(*limits[x], 20)
+#         bincen = (bins[:-1]+bins[1:])/2.
+#         out = stats.binned_weighted_quantile(D[x][s[z]],D[y][s[z]], D['weight'][s[z]],bins,[0.84,0.50,0.16])
+#         N, be = np.histogram(D['log10Mstar_30'][s[z]], bins=bins)
+#         # print(len(N), len(out[:,1]))
+#
+#         s2 = N>10
+#
+#         ax.plot(bincen, out[:,1], c=c, ls = ':')
+#         ax.plot(bincen[s2], out[:,1][s2], c=c, ls = '-', label = rf'$\rm z={z}$')
+#         # ax.fill_between(bincen[Ns], out[:,0][Ns], out[:,2][Ns], color='k', alpha = 0.2)
+#
+#
+#     ax.set_xlim(limits[x])
+#     ax.set_ylim(limits[y])
+#
+#     ax.set_ylabel(rf'$\rm {labels[y]}$', fontsize = 9)
+#     ax.set_xlabel(rf'$\rm {labels[x]}$', fontsize = 9)
+#
+#     ax.legend(fontsize=7)
+#
+#     return fig, ax
 
 
 
@@ -451,7 +523,15 @@ def linear(D, properties, s, labels = labels, limits = limits, scatter_colour_qu
 
 
 
-def linear_mcol(D, diagnostics, properties, s, labels = labels, limits = limits, scatter_colour_quantity = False, scatter_cmap = None, bins = 50, full_width = True):
+def linear_mcol(D, diagnostics, properties, s, labels = labels, limits = limits, scatter_colour_quantity = False, scatter_cmap = None, bins = 50, full_width = True, add_correlation_coefficient = False):
+
+    z = scatter_colour_quantity
+
+    if not scatter_cmap:
+        if scatter_colour_quantity in colors_.cmap.keys():
+            scatter_cmap = colors_.cmap[z]
+        else:
+            scatter_cmap = 'plasma'
 
 
     # --- if no limits provided base limits on selected data ranges
@@ -502,20 +582,31 @@ def linear_mcol(D, diagnostics, properties, s, labels = labels, limits = limits,
 
             # --- scatter plot here
 
+            X = D[x][s]
+            Y = D[y][s]
+
 
             if scatter_colour_quantity:
-                ax.scatter(D[x][s],D[y][s], s=1, alpha=0.5, c = cmap(norm(D[scatter_colour_quantity][s])))
-            else:
-                ax.scatter(D[x][s],D[y][s], s=1, alpha=0.5, c = 'k')
+                ax.scatter(X,Y, s=1, alpha=0.5, c = cmap(norm(D[scatter_colour_quantity][s])))
+
 
             # --- weighted median Lines
 
             bins = np.linspace(*limits[x], 20)
             bincen = (bins[:-1]+bins[1:])/2.
-            out = stats.binned_weighted_quantile(D[x][s],D[y][s], D['weight'][s],bins,[0.84,0.50,0.16])
+            out = stats.binned_weighted_quantile(X,Y, D['weight'][s],bins,[0.84,0.50,0.16])
 
             ax.plot(bincen, out[:,1], c='k', ls = '-')
             # ax.fill_between(bincen[Ns], out[:,0][Ns], out[:,2][Ns], color='k', alpha = 0.2)
+
+            if add_correlation_coefficient:
+
+                # s2 = (~np.isnan(Y))&(~np.isnan(X))&(~np.isnan(Y))&(~np.isnan(X))
+                s2 = (np.isfinite(X))&(np.isfinite(Y))
+                r, p = pearsonr(X[s2],Y[s2])
+
+                ax.text(0.1, 0.9, rf'$\rm r={r:.2f}$', horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, fontsize = 8, path_effects=[pe.withStroke(linewidth=4, foreground='white')])
+
 
             ax.set_xlim(limits[x])
             ax.set_ylim(limits[y])
@@ -547,19 +638,118 @@ def linear_mcol(D, diagnostics, properties, s, labels = labels, limits = limits,
 
 
 
+def zevo(D, zeds, x, y, s, labels = labels, limits = limits, bins = 20, colors = colors_.redshift, add_weighted_range = False, fig_size = (3.5, 3.5)):
+
+    # this is actually repeated above but with different definitions.
+
+    fig, ax = fplt.simple(fig_size)
+
+    for z,c in zip(zeds, colors):
+
+        X = D[z][x][s[z]]
+        Y = D[z][y][s[z]]
+        w = D[z]['weight'][s[z]]
+
+
+        if add_weighted_range:
+            weighted_range(ax, X, Y, w, limits = limits[x], bins = bins, weighted = weighted, quantiles = quantiles)
+
+        weighted_median(ax, X, Y, w, limits = limits[x], bins = bins, c = c, label = rf'$\rm z={z:.0f}$')
+
+    ax.set_xlim(limits[x])
+    ax.set_ylim(limits[y])
+
+    ax.set_ylabel(rf'$\rm {labels[y]}$', fontsize = 9)
+    ax.set_xlabel(rf'$\rm {labels[x]}$', fontsize = 9)
+
+    ax.legend(fontsize=7)
+
+    return fig, ax
+
+
+
+def zevo_whist(D, zeds, x, y, s, labels = labels, limits = limits, nbins = nbins, bins = 50, zevo_cmap = 'cmr.gem_r', hist_bins = 30):
+
+    # this is actually repeated above but with different definitions.
+
+    left  = 0.15
+    width = 0.6
+    hwidth = 0.2
+    height = 0.75
+    bottom = 0.2
+
+
+    fig = plt.figure(figsize = (3.5, 3.0))
+
+    ax = fig.add_axes((left, bottom, width, height))
+    hax = fig.add_axes([left+width, bottom, hwidth, height])
+
+    colors = cmr.take_cmap_colors(zevo_cmap, len(zeds))
+
+    for z,c in zip(zeds, colors):
+
+        # --- weighted median Lines
+
+        if type(bins) is not np.ndarray:
+            bins = np.linspace(*limits[x], bins)
+
+        bincen = (bins[:-1]+bins[1:])/2.
+        out = stats.binned_weighted_quantile(D[z][x][s[z]],D[z][y][s[z]], D[z]['weight'][s[z]],bins,[0.84,0.50,0.16])
+
+        N, be = np.histogram(D[z][x][s[z]], bins=bins)
+
+        ax.plot(bincen, out[:,1], c=c, ls = ':', lw=1)
+        ax.plot(bincen[N>10], out[:,1][N>10], c=c, ls = '-', lw=1)
+
+        hax.hist(D[z][y][s[z]], bins=hist_bins, orientation='horizontal', color=c, histtype=u'step', fill=False, density=True)
+
+
+    handles = []
+    for z,c in zip(zeds, colors):
+        handles.append(Line2D([0], [0], label=rf'$\rm z={z:.0f}$', color=c, lw=1))
+    hax.legend(handles=handles, fontsize=7, labelspacing=0.1)
+
+
+
+    ax.set_xlim(limits[x])
+    ax.set_ylim(limits[y])
+    hax.set_ylim(limits[y])
+
+    ax.set_ylabel(rf'$\rm {labels[y]}$', fontsize = 9)
+    ax.set_xlabel(rf'$\rm {labels[x]}$', fontsize = 9)
+
+    # hax.legend(fontsize=7, labelspacing=0.1)
+
+    hax.set_yticks([])
+    hax.set_xticks([])
+
+
+
+
+    return fig, ax, hax
 
 
 
 
 
 
-def linear_redshift(D, zeds, x, y, s, labels = labels, limits = limits, nbins = nbins, scatter = True, scatter_colour_quantity = False, scatter_cmap = None, bins = 50, rows = 1, add_weighted_median = True, add_weighted_range = False):
 
+
+
+
+def linear_redshift(D, zeds, x, y, s, labels = labels, limits = limits, nbins = nbins, scatter = True, scatter_colour_quantity = False, scatter_cmap = None, bins = 20, rows = 1, add_weighted_median = True, add_weighted_range = False, lowz = False, add_zevo = False, weighted = True, quantiles = default_quantiles):
+
+
+    z = scatter_colour_quantity
+    if not scatter_cmap:
+        if scatter_colour_quantity in colors_.cmap.keys():
+            scatter_cmap = colors_.cmap[z]
+        else:
+            scatter_cmap = 'plasma'
 
     # --- if no limits provided base limits on selected data ranges
     for v in [x,y]:
         if v not in limits.keys():
-
             limits[v] = [np.min(D[zeds[-1]][v][s[zeds[-1]]]), np.max(D[zeds[-1]][v][s[zeds[-1]]])]
 
     # --- if no labels provided just use the name
@@ -567,91 +757,57 @@ def linear_redshift(D, zeds, x, y, s, labels = labels, limits = limits, nbins = 
         if v not in labels.keys():
             labels[v] = v
 
-    # --- if no bins provided just use the name
-    for v in [x, y]:
-        if v not in nbins.keys():
-            nbins[v] = 25
-
 
     if scatter_colour_quantity:
         norm = mpl.colors.Normalize(vmin=limits[scatter_colour_quantity][0], vmax=limits[scatter_colour_quantity][1])
         cmap = scatter_cmap
 
-    N = len(zeds)
+    Npanels = len(zeds)
+
+    if add_zevo:
+        Npanels += 1
 
 
-    if rows == 1:
-        left = 0.1
-        top = 0.9
-        bottom = 0.25
-        right = 0.9
-        panel_width = (right-left)/N
-        panel_height = top-bottom
-        fig, axes = plt.subplots(1, N, figsize = (7,7/(panel_height/panel_width)), sharey = True)
-        plt.subplots_adjust(left=left, top=top, bottom=bottom, right=right, wspace=0.0, hspace=0.0)
-    if rows == 2:
-        left = 0.1
-        top = 0.95
-        bottom = 0.1
-        right = 0.9
-        panel_width = (right-left)/int(N/2)
-        panel_height = top-bottom
-        fig, axes = plt.subplots(2, int(N/2), figsize = (7,rows*7/(panel_height/panel_width)), sharey = True, sharex = True)
-        plt.subplots_adjust(left=left, top=top, bottom=bottom, right=right, wspace=0.0, hspace=0.1)
-        axes = axes.flatten()
+    fig, axes, (left, right, top, bottom) = fplt.multiple(Npanels, rows = rows)
 
-
-
-
+    if add_zevo:
+        ax_zevo = axes[j, -1]
 
     for ax, z in zip(axes, zeds):
+
+        X = D[z][x][s[z]]
+        Y = D[z][y][s[z]]
+        w = D[z]['weight'][s[z]]
 
         # --- scatter plot here
         if scatter:
             if scatter_colour_quantity:
-                ax.scatter(D[z][x][s[z]],D[z][y][s[z]], s=1, alpha=0.5, c = cmap(norm(D[z][scatter_colour_quantity][s[z]])))
+                ax.scatter(X, Y, s=1, alpha=0.5, c = cmap(norm(D[z][scatter_colour_quantity][s[z]])))
             else:
-                ax.scatter(D[z][x][s[z]],D[z][y][s[z]], s=1, alpha=0.5, c = 'k')
+                ax.scatter(X, Y, s=1, alpha=0.1, c = 'k')
 
         # --- weighted median Lines
+        if add_weighted_range:
+            weighted_range(ax, X, Y, w, limits = limits[x], bins = bins, weighted = weighted, quantiles = quantiles)
 
         if add_weighted_median:
-            bins = np.linspace(*limits[x], nbins[x])
-            bincen = (bins[:-1]+bins[1:])/2.
-            out = stats.binned_weighted_quantile(D[z][x][s[z]],D[z][y][s[z]], D[z]['weight'][s[z]],bins,[0.84,0.50,0.16])
+            b1, m1, b2, m2 = weighted_median(ax, X, Y, w, limits = limits[x], bins = bins, weighted = weighted)
 
-            N, bin_edges = np.histogram(D[z][x][s[z]], bins=bins)
-
-
-            i = np.array(range(len(N)))
-
-            ss = i[N<1]
-            if len(ss)>0:
-                sN = i[i<ss[0]]
-            else:
-                sN = i
-
-            ax.plot(bincen[sN], out[:,1][sN], c='k', ls = '--')
-
-            ss = i[N<10]
-            if len(ss)>0:
-                sN = i[i<ss[0]]
-            else:
-                sN = i
-
-
-            ax.plot(bincen[sN], out[:,1][sN], c='k', ls = '-')
-
-            if add_weighted_range:
-                ax.fill_between(bincen[sN], out[:,0][sN], out[:,2][sN], color='k', alpha = 0.2)
 
         ax.set_xlim(limits[x])
         ax.set_ylim(limits[y])
 
         if rows == 1:
-            ax.text(0.5, 1.02, rf'$\rm z={z}$', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes, fontsize = 7)
+            ax.text(0.5, 1.02, rf'$\rm z={z:.0f}$', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes, fontsize = 7)
         if rows == 2:
-            ax.text(0.5, 1.01, rf'$\rm z={z}$', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes, fontsize = 8)
+            ax.text(0.5, 1.01, rf'$\rm z={z:.0f}$', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes, fontsize = 8)
+
+
+    # --- add final redshift trend to all plots
+    if lowz and add_weighted_median:
+        for ax in axes[:-1]:
+            ax.plot(b1, m1, c='k', ls = '--', lw=2, alpha=0.2)
+            ax.plot(b2, m2, c='k', ls = '-', lw=2, alpha=0.2)
 
 
 
@@ -684,7 +840,7 @@ def linear_redshift(D, zeds, x, y, s, labels = labels, limits = limits, nbins = 
 
 
 
-def linear_redshift_density(D, zeds, x, y, s, labels = labels, limits = limits, rows = 1, nbins = 20):
+def linear_redshift_density(D, zeds, x, y, s, labels = labels, limits = limits, nbins = 20):
 
 
     # --- if no limits provided base limits on selected data ranges
@@ -697,77 +853,128 @@ def linear_redshift_density(D, zeds, x, y, s, labels = labels, limits = limits, 
         if v not in labels.keys():
             labels[v] = v
 
-
     N = len(zeds)
 
-    if rows == 1:
-        left = 0.1
-        top = 0.9
-        bottom = 0.25
-        right = 0.9
-        panel_width = (right-left)/N
-        panel_height = top-bottom
-        fig, axes = plt.subplots(1, N, figsize = (7,7/(panel_height/panel_width)), sharey = True)
-        plt.subplots_adjust(left=left, top=top, bottom=bottom, right=right, wspace=0.0, hspace=0.0)
-    if rows == 2:
-        left = 0.1
-        top = 0.95
-        bottom = 0.1
-        right = 0.9
-        panel_width = (right-left)/int(N/2)
-        panel_height = top-bottom
-        fig, axes = plt.subplots(2, int(N/2), figsize = (7,rows*7/(panel_height/panel_width)), sharey = True, sharex = True)
-        plt.subplots_adjust(left=left, top=top, bottom=bottom, right=right, wspace=0.0, hspace=0.1)
-        axes = axes.flatten()
+    left = 0.075
+    top = 0.9
+    bottom = 0.25
+    right = 0.85
+    panel_width = (right-left)/N
+    panel_height = top-bottom
+    fig, axes = plt.subplots(1, N, figsize = (7,7/(panel_height/panel_width)), sharey = True)
+    plt.subplots_adjust(left=left, top=top, bottom=bottom, right=right, wspace=0.0, hspace=0.0)
 
 
-    ldelta_bins = np.linspace(-0.25,0.25,6)
+
+    ldelta_bins = np.array([-0.3, -0.2, -0.1, 0.1, 0.2, 0.3])
+
+
 
     norm = mpl.colors.Normalize(vmin=-0.3, vmax=0.3)
-    cmap = cm.Spectral_r
-
 
 
     for ax, z in zip(axes, zeds):
 
-        print('-'*10,z)
+        for ldelta in zip(ldelta_bins[:-1][::-1],ldelta_bins[1:][::-1]) :
 
-        for ldelta in ldelta_bins:
+            c = colors_.density_cmap(norm(np.mean(ldelta)))
 
-            sd = s[z]&(np.fabs(D[z]['ldelta']-ldelta)<0.05)
-
-            print(ldelta, len(sd[sd]))
+            sd = s[z]&(D[z]['ldelta']>ldelta[0])&(D[z]['ldelta']<ldelta[1])
 
             # --- weighted median Lines
 
-            bins = np.linspace(*limits[x], nbins)
-            bincen = (bins[:-1]+bins[1:])/2.
-            out = stats.binned_weighted_quantile(D[z][x][sd],D[z][y][sd], D[z]['weight'][sd],bins,[0.84,0.50,0.16])
+            X = D[z][x][sd]
+            Y = D[z][y][sd]
+            w = D[z]['weight'][sd]
 
+            _ = weighted_median(ax, X, Y, w, limits = limits[x], bins = 20, weighted = True, c = c, label = rf'$\rm [{ldelta[0]:.2f},{ldelta[1]:.2f})$')
 
-            # ax.plot(bincen, out[:,1], c=cmap(norm(ldelta)), ls = '-', label = rf'$\rm {ldelta-0.05:.2f}<\log_{{10}}(1+\delta)<{ldelta+0.05:.2f}$')
-            ax.plot(bincen, out[:,1], c=cmap(norm(ldelta)), ls = '-', label = rf'$\rm [{ldelta-0.05:.2f},{ldelta+0.05:.2f})$')
-            # ax.fill_between(bincen[Ns], out[:,0][Ns], out[:,2][Ns], color='k', alpha = 0.2)
 
         ax.set_xlim(limits[x])
         ax.set_ylim(limits[y])
 
-        if rows == 1:
-            ax.text(0.5, 1.02, rf'$\rm z={z}$', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes, fontsize = 7)
-        if rows == 2:
-            ax.text(0.5, 1.01, rf'$\rm z={z}$', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes, fontsize = 8)
+        ax.text(0.5, 1.02, rf'$\rm z={z:.0f}$', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes, fontsize = 7)
 
 
 
-    axes[0].legend(title = r'$\rm \log_{{10}}(1+\delta)$', title_fontsize = 6, fontsize = 5, labelspacing = 0.0)
+    axes[-1].legend(title = r'$\rm \log_{{10}}(1+\delta_{14})$', title_fontsize = 8, fontsize = 7, labelspacing = 0.0, bbox_to_anchor = (1,0,2,1), loc = 'center left')
 
     axes[0].set_ylabel(rf'$\rm {labels[y]}$', fontsize = 9)
-    if rows == 2: axes[3].set_ylabel(rf'$\rm {labels[y]}$', fontsize = 9)
 
     fig.text(left+(right-left)/2, 0.04, rf'$\rm {labels[x]}$', ha='center', fontsize = 9)
 
 
-    return fig
+    return fig, axes
+
+
+
+
+def linear_redshift_comparison(D, zeds, x, y_, s, labels = labels, limits = limits, bins = 20, colors = 'k', line_styles = ['-','--','-.',':'], ylabel = None, ylims = None):
+
+
+    # --- if no limits provided base limits on selected data ranges
+    for v in [x]+y_:
+        if v not in limits.keys():
+            limits[v] = [np.min(D[zeds[-1]][v][s[zeds[-1]]]), np.max(D[zeds[-1]][v][s[zeds[-1]]])]
+
+    # --- if no labels provided just use the name
+    for v in [x]+y_:
+        if v not in labels.keys():
+            labels[v] = v
+
+    N = len(zeds)
+
+    left = 0.075
+    top = 0.9
+    bottom = 0.25
+    right = 0.95
+    panel_width = (right-left)/N
+    panel_height = top-bottom
+    fig, axes = plt.subplots(1, N, figsize = (7,7/(panel_height/panel_width)), sharey = True)
+    plt.subplots_adjust(left=left, top=top, bottom=bottom, right=right, wspace=0.0, hspace=0.0)
+
+
+    if type(colors) == str:
+
+        colors = [colors]*len(y_)
+
+    for ax, z in zip(axes, zeds):
+
+        sd = s[z]
+
+        for y, c, ls in zip(y_, colors, line_styles):
+
+            # --- weighted median Lines
+
+            sy = ~np.isnan(D[z][y])
+
+
+            X = D[z][x][sd&sy]
+            Y = D[z][y][sd&sy]
+            w = D[z]['weight'][sd&sy]
+
+            _ = weighted_median(ax, X, Y, w, limits = limits[x], bins = bins, weighted = True, c = c, lw=1, ls = ls, label = rf'$\rm {labels[y]}$')
+
+
+
+
+        ax.set_xlim(limits[x])
+
+        if ylims:
+            ax.set_ylim(ylims)
+
+        ax.text(0.5, 1.02, rf'$\rm z={z:.0f}$', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes, fontsize = 7)
+
+
+
+    axes[0].legend(fontsize = 6, labelspacing = 0.1, loc = 'upper left')
+
+    axes[0].set_ylabel(rf'$\rm {ylabel}$', fontsize = 9)
+
+    fig.text(left+(right-left)/2, 0.04, rf'$\rm {labels[x]}$', ha='center', fontsize = 9)
+
+
+    return fig, axes
 
 
 
@@ -775,12 +982,7 @@ def linear_redshift_density(D, zeds, x, y, s, labels = labels, limits = limits, 
 
 
 
-
-
-
-
-
-def linear_redshift_mcol(D, zeds, x, properties, s, labels = labels, limits = limits, scatter_colour_quantity = False, scatter_cmap = None, bins = 50, add_linear_fit = False, height = 1):
+def linear_redshift_mcol(D, zeds, x, properties, s, labels = labels, limits = limits, scatter = False, scatter_colour_quantity = False, scatter_cmap = None, add_weighted_median = True, add_weighted_range = False, bins = 20, weighted = True, quantiles = default_quantiles, add_linear_fit = False, height = 1, add_zevo = False, zevo_cmap = None, fontsize = 9, master_label = None):
 
 
     # --- if no limits provided base limits on selected data ranges
@@ -800,39 +1002,60 @@ def linear_redshift_mcol(D, zeds, x, properties, s, labels = labels, limits = li
     Np = len(properties)
     N = len(zeds)
 
-    left = 0.1
-    top = 0.9
-    bottom = 0.15 #somewhat dependent on Np
-    right = 0.9
+    if add_zevo:
+        N += 1
 
-    panel_width = (right-left)/N
-    panel_height = (top-bottom)/Np
+    fig, axes, (left, right, top, bottom) = fplt.multiplerows(N, Np, height=height)
 
-    fig, axes = plt.subplots(Np, N, figsize = (7,height*7/(panel_height/panel_width)), sharex = True, sharey = 'row')
-    plt.subplots_adjust(left=left, top=top, bottom=bottom, right=right, wspace=0.0, hspace=0.0)
+    if master_label:
+        fig.text(0.02, (bottom+top)*0.5, rf'$\rm {master_label}$', fontsize=9, va='center', ha='center', rotation = 90)
+
+
+
+    if zevo_cmap:
+        colors = cmr.take_cmap_colors(zevo_cmap, len(zeds))
 
 
     for j,y in enumerate(properties):
+
+        if add_zevo:
+            ax_zevo = axes[j, -1]
+
 
         for i,z in enumerate(zeds):
 
             ax = axes[j, i]
 
-            # --- scatter plot here
-
-            if scatter_colour_quantity:
-                ax.scatter(D[z][x][s[z]],D[z][y][s[z]], s=1, alpha=0.5, c = cmap(norm(D[z][scatter_colour_quantity][s[z]])))
+            if zevo_cmap:
+                c = colors[i]
             else:
-                ax.scatter(D[z][x][s[z]],D[z][y][s[z]], s=1, alpha=0.5, c = 'k')
+                c = 'k'
 
             # --- weighted median Lines
 
-            bins = np.linspace(*limits[x], 20)
-            bincen = (bins[:-1]+bins[1:])/2.
-            out = stats.binned_weighted_quantile(D[z][x][s[z]],D[z][y][s[z]], D[z]['weight'][s[z]],bins,[0.84,0.50,0.16])
+            X = D[z][x][s[z]]
+            Y = D[z][y][s[z]]
+            w = D[z]['weight'][s[z]]
 
-            ax.plot(bincen, out[:,1], c='k', ls = '-')
-            # ax.fill_between(bincen[Ns], out[:,0][Ns], out[:,2][Ns], color='k', alpha = 0.2)
+            # --- scatter plot here
+            if scatter:
+                if scatter_colour_quantity:
+                    ax.scatter(X, Y, s=1, alpha=0.5, c = cmap(norm(D[z][scatter_colour_quantity][s[z]])))
+                else:
+                    ax.scatter(X, Y, s=1, alpha=0.1, c = 'k')
+
+            # --- weighted median Lines
+
+            if add_weighted_range:
+                weighted_range(ax, X, Y, w, limits = limits[x], bins = bins, weighted = weighted, quantiles = quantiles, c = c)
+
+            if add_weighted_median:
+                b1, m1, b2, m2 = weighted_median(ax, X, Y, w, limits = limits[x], bins = bins, weighted = weighted, c = c)
+
+
+            if add_zevo:
+                ax_zevo.plot(b1, m1, c=c, ls = '--', lw=1)
+                ax_zevo.plot(b2, m2, c=c, ls = '-', lw=1)
 
             # --- linear first
 
@@ -853,11 +1076,12 @@ def linear_redshift_mcol(D, zeds, x, properties, s, labels = labels, limits = li
             ax.set_xlim(limits[x])
             ax.set_ylim(limits[y])
 
-        axes[j, 0].set_ylabel(rf'$\rm {labels[y]}$', fontsize = 9)
+        axes[j, 0].set_ylabel(rf'$\rm {labels[y]}$', fontsize = fontsize)
+
+
 
     for i,z in enumerate(zeds):
-        axes[0, i].text(0.5, 1.02, rf'$\rm z={z}$', horizontalalignment='center', verticalalignment='bottom', transform=axes[0, i].transAxes, fontsize = 7)
-
+        axes[0, i].text(0.5, 1.02, rf'$\rm z={z:.0f}$', horizontalalignment='center', verticalalignment='bottom', transform=axes[0, i].transAxes, fontsize = 7, color='k')
 
 
     # --- add colourbar

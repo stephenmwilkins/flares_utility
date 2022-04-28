@@ -35,8 +35,8 @@ limits['BD'] = [2, 5]
 limits['log10BD'] = [0.,1.5]
 
 limits['beta'] = [-2.7,-1.1]
-limits['log10BB'] = [-0.09,0.49]
-limits['log10HbetaEW'] = [0.01,2.4]
+limits['log10BB'] = [-0.19,0.49]
+limits['log10HbetaEW'] = [1.26,2.74]
 
 limits['beta_Intrinsic'] = limits['beta_Pure_Stellar'] = [-2.9, -1.7]
 limits['log10BB_Intrinsic'] = limits['log10BB_Pure_Stellar'] = limits['log10BB']
