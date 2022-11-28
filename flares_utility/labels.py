@@ -1,35 +1,75 @@
 
 
+def log10x(x): return rf'\log_{{10}}({x})'
 
-log10x = lambda x: rf'\log_{{10}}({x})'
 
-
-# quantities
+# quantities --------------------------
 
 quantities = {}
 quantities['Mstar'] = quantities['Mstar_30'] = r'M_{\star}'
 
-for f in ['FUV','NUV','V']:
+for f in ['FUV', 'NUV', 'V']:
     quantities[f] = rf'L_{{ {f} }}'
     quantities['L'+f] = rf'L_{{ {f} }}'
 
 quantities['beta'] = r'\beta'
 # quantities['CIIIEW'] = r'EW_0([CIII],CIII]\lambda\lambda 1907,1909\AA)'
-quantities['CIIIEW'] = r'EW_0([CIII],CIII])'
-# units
+quantities['CIIIEW'] = r'EW_0({\regular [CIII],CIII]})'
+
+quantities['Zstar'] = r'Z_{\star}'
+
+quantities['OIII'] = r'L_{\regular [OIII]}'
+quantities['OIIIEW'] = r'EW_0({\regular [OIII]})'
+quantities['OIIIEW_intrinsic'] = r'EW_0^{int}({\regular [OIII]})'
+quantities['OIIIHb'] = r'L_{\regular [OIII]+H\beta}'
+quantities['OIIIHbEW'] = r'EW_0({\regular [OIII]+H\beta})'
+quantities['HI4861_EW'] = r'EW_0({\regular H\beta})'
+quantities['HbetaEW'] = quantities['HI4861_EW']
+
+quantities['B'] = 'SFR/L_{FUV}'
+
+# units (labels) --------------------------
 
 units = {}
 units['Mstar'] = units['Mstar_30'] = r'M_{\odot}'
+units['SFR'] = r'M_{\odot}\ yr^{-1}'
+units['sSFR'] = r'Gyr^{-1}'
 
-for f in ['FUV','NUV','V']:
+for f in ['FUV', 'NUV', 'V']:
     units[f] = r'erg\ s^{{-1}}\ Hz^{{-1}}'
     units['L'+f] = r'erg\ s^{{-1}}\ Hz^{{-1}}'
 
 units['beta'] = None
-units['CIIIEW'] =r'\AA'
+
+for l in ['CIII', 'OIII', 'OIIIHb', 'HI4861_', 'Hbeta']:
+    for dust in ['', '_intrinsic']:
+        units[l+dust] = r'erg\ s^{{-1}}'
+        units[l+'EW'+dust] = r'{\regular \AA}'
+
+units['Zstar'] = units['Zgas'] = units['Zstar_Fe'] = None
+units['B'] = r'M_{\odot}\ yr^{-1}/erg\ s^{{-1}}\ Hz^{{-1}}'
+
+# unit (astropy) --------------------------
+
+unit = {}
+unit['Mstar'] = unit['Mstar_30'] = r'Msun'
+unit['SFR'] = r'Msun / yr'
+unit['sSFR'] = r'Gyr^-1'
+unit['age'] = 'Myr'
+
+for f in ['FUV', 'NUV', 'V']:
+    unit['L'+f] = unit[f] = 'erg s^-1 Hz^-1'
 
 
-# composite labels
+unit['beta'] = None
+
+for l in ['CIII', 'OIIIHb', 'HI4861_', 'Hbeta']:
+    unit[l+'EW'] = 'AA'
+
+unit['Zstar'] = units['Zgas'] = units['Zstar_Fe'] = None
+
+
+# composite labels --------------------------
 
 labels = {}
 for k in list(quantities.keys()):
@@ -43,11 +83,6 @@ for k in list(quantities.keys()):
     units['log10'+k] = units[k]
 
 
-
-
-
-
-
 # labels['log10Mstar_30'] = rf'\log_{{10}}(M_{{\star}}/ {units['Mstar']} )'
 # labels['log10Mstar'] = rf'\log_{{10}}(M_{{\star}}/ {units['Mstar']} )'
 
@@ -57,8 +92,7 @@ for k in list(quantities.keys()):
 #     labels[f'log10{f}_Intrinsic'] = rf'\log_{{10}}(L_{{ {f} }}^{{intrinsic}}/erg\ s^{{-1}}\ Hz^{{-1}})'
 
 
-
-labels['OIIIHbEW'] = r'EW([OIII+H\beta])/\AA'
+# labels['OIIIHbEW'] = r'EW([OIII+H\beta])/\AA'
 
 labels['log10BB'] = r'\log_{10}(L_{4200}/L_{3500})'
 labels['log10BB_Intrinsic'] = rf"{labels['log10BB']}^{{\rm int}}"
@@ -75,9 +109,6 @@ labels['log10HbetaEW_Intrinsic'] = rf"{labels['log10HbetaEW']}^{{\rm int}}"
 labels['log10SFR_inst_30'] = r'\log_{10}({\rm SFR_{inst}}/{\rm M_{\odot}\ yr^{-1})}'
 labels['log10SFR_10'] = r'\log_{10}({\rm SFR_{10}}/{\rm M_{\odot}\ yr^{-1})}'
 labels['log10SFR'] = r'\log_{10}({\rm SFR}/{\rm M_{\odot}\ yr^{-1})}'
-
-
-
 
 
 labels['log10sSFR'] = r'\log_{10}({\rm sSFR}/{\rm Gyr^{-1})}'
@@ -97,8 +128,8 @@ labels['timescale'] = r'SF\ timescale\ \tau_{SF}/{\rm Myr}'
 labels['MassWeightedGasZ'] = r'Z_{g}'
 labels['log10MassWeightedGasZ'] = log10x(labels['MassWeightedGasZ'])
 
-labels['Z'] = r'Z'
-labels['log10Z'] = log10x(labels['Z'])
+# labels['Z'] = r'Z'
+# labels['log10Z'] = log10x(labels['Z'])
 
 labels['log10SFRinst/10'] = r'log_{10}(SFR_{inst}/SFR_{10})'
 labels['log10SFR10/50'] = r'log_{10}(SFR_{10}/SFR_{50})'
@@ -113,8 +144,6 @@ labels['log10lambda'] = rf'log_{{10}}{labels["lambda"]}'
 labels['skew'] = r'skew'
 labels['nvariance'] = r'(\lambda\sigma)^2'
 labels['nkurtosis'] = r'excess\ kurtosis'
-
-
 
 
 labels['AFUV'] = r'A_{FUV}'

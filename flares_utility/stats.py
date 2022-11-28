@@ -4,6 +4,20 @@ import numpy as np
 
 
 
+def weighted_mean(data, weights):
+    """
+    Calculate the weighted mean
+
+    Args:
+      data (list or numpy.array): data
+      weights (list or numpy.array): weights
+
+    Author: Stephen Wilkins
+
+    """
+    return np.sum(data*weights)/np.sum(weights)
+
+
 def weighted_median(data, weights):
     """
     Args:
