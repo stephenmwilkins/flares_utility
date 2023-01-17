@@ -841,7 +841,7 @@ def zevo_whist(D, zeds, x, y, s, labels=labels, limits=limits, nbins=nbins, bins
     return fig, ax, hax
 
 
-def linear_redshift(D, zeds, x, y, s, labels=labels, limits=limits, nbins=nbins, scatter=True, scatter_colour_quantity=False, scatter_cmap=None, bins=20, rows=1, add_weighted_median=True, add_weighted_range=False, lowz=False, add_zevo=False, weighted=True, quantiles=default_quantiles, single_column=False):
+def linear_redshift(D, zeds, x, y, s, labels=labels, limits=limits, nbins=nbins, scatter=True, scatter_colour_quantity=False, scatter_cmap=None, bins=20, rows=1, add_weighted_median=True, add_weighted_range=False, lowz=False, add_zevo=False, weighted=True, quantiles=default_quantiles, single_column=False, ylabel_fontsize=9):
 
     z = scatter_colour_quantity
     if not scatter_cmap:
@@ -923,9 +923,9 @@ def linear_redshift(D, zeds, x, y, s, labels=labels, limits=limits, nbins=nbins,
 
     if rows > 1:
         for i in range(rows):
-            axes[i, 0].set_ylabel(rf'$\rm {labels[y]}$', fontsize=9)
+            axes[i, 0].set_ylabel(rf'$\rm {labels[y]}$', fontsize=ylabel_fontsize)
     else:
-        axes[0].set_ylabel(rf'$\rm {labels[y]}$', fontsize=9)
+        axes[0].set_ylabel(rf'$\rm {labels[y]}$', fontsize=ylabel_fontsize)
 
     # --- add colourbar
 

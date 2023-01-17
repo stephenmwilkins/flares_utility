@@ -1,4 +1,6 @@
 
+from copy import deepcopy
+
 
 def log10x(x): return rf'\log_{{10}}({x})'
 
@@ -7,6 +9,10 @@ def log10x(x): return rf'\log_{{10}}({x})'
 
 quantities = {}
 quantities['Mstar'] = quantities['Mstar_30'] = r'M_{\star}'
+quantities['SFR'] = r'SFR'
+
+for ts in [10, 50, 100]:
+    quantities[f'SFR{ts}'] = rf'SFR_{{ {ts} }}'
 
 for f in ['FUV', 'NUV', 'V']:
     quantities[f] = rf'L_{{ {f} }}'
@@ -32,7 +38,7 @@ quantities['B'] = 'SFR/L_{FUV}'
 
 units = {}
 units['Mstar'] = units['Mstar_30'] = r'M_{\odot}'
-units['SFR'] = r'M_{\odot}\ yr^{-1}'
+units['SFR'] = units['SFR10'] = units['SFR50'] = units['SFR100'] = r'M_{\odot}\ yr^{-1}'
 units['sSFR'] = r'Gyr^{-1}'
 
 for f in ['FUV', 'NUV', 'V']:
@@ -53,12 +59,12 @@ units['B'] = r'M_{\odot}\ yr^{-1}/erg\ s^{{-1}}\ Hz^{{-1}}'
 
 unit = {}
 unit['Mstar'] = unit['Mstar_30'] = r'Msun'
-unit['SFR'] = r'Msun / yr'
+unit['SFR'] = unit['SFR10'] = unit['SFR50'] = unit['SFR100'] = r'Msun / yr'
 unit['sSFR'] = r'Gyr^-1'
 unit['age'] = 'Myr'
 
 for f in ['FUV', 'NUV', 'V']:
-    unit['L'+f] = unit[f] = 'erg s^-1 Hz^-1'
+    unit['L'+f] = unit[f] = unit[f+'_intrinsic'] = 'erg s^-1 Hz^-1'
 
 
 unit['beta'] = None
@@ -67,6 +73,10 @@ for l in ['CIII', 'OIIIHb', 'HI4861_', 'Hbeta']:
     unit[l+'EW'] = 'AA'
 
 unit['Zstar'] = units['Zgas'] = units['Zstar_Fe'] = None
+
+
+for k, v in deepcopy(unit).items():
+    unit['log10'+k] = f'dex({v})'
 
 
 # composite labels --------------------------
@@ -106,10 +116,10 @@ labels['beta_Pure_Stellar'] = rf"{labels['beta']}^{{\star}}"
 labels['log10HbetaEW'] = r'\log_{10}(H\beta\ EW/\AA)'
 labels['log10HbetaEW_Intrinsic'] = rf"{labels['log10HbetaEW']}^{{\rm int}}"
 
-labels['log10SFR_inst_30'] = r'\log_{10}({\rm SFR_{inst}}/{\rm M_{\odot}\ yr^{-1})}'
-labels['log10SFR_10'] = r'\log_{10}({\rm SFR_{10}}/{\rm M_{\odot}\ yr^{-1})}'
-labels['log10SFR'] = r'\log_{10}({\rm SFR}/{\rm M_{\odot}\ yr^{-1})}'
-
+# labels['log10SFR_inst_30'] = r'\log_{10}({\rm SFR_{inst}}/{\rm M_{\odot}\ yr^{-1})}'
+# labels['log10SFR_10'] = r'\log_{10}({\rm SFR_{10}}/{\rm M_{\odot}\ yr^{-1})}'
+# labels['log10SFR'] = r'\log_{10}({\rm SFR}/{\rm M_{\odot}\ yr^{-1})}'
+#
 
 labels['log10sSFR'] = r'\log_{10}({\rm sSFR}/{\rm Gyr^{-1})}'
 labels['log10sSFR_inst'] = r'\log_{10}({\rm sSFR_{inst}}/{\rm Gyr^{-1})}'
