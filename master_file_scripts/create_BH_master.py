@@ -29,7 +29,7 @@ for sim in sims:
         del fd[f'{sim}/{tag}/Galaxy/BPASS_2.2.1/Chabrier300/SED']
 
         fd.create_group(f'{sim}/{tag}/Particle')
-        print(len(f'{sim}/{tag}/Particle/BH_ID'))
+        print(f'{sim}/{tag}/Particle/BH_ID')
         for k in ['BH_Age', 'BH_Coordinates', 'BH_ID', 'BH_Index', 'BH_Mass', 'BH_Mdot', 'BH_los', 'BH_sml']:
             fs.copy(f'{sim}/{tag}/Particle/{k}', fd[f'{sim}/{tag}/Particle'])
 
