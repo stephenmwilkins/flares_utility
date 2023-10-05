@@ -3,15 +3,15 @@ import h5py
 
 # this strips the full SED and the non-BH particle data
 
-# indir = '/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/'
-indir = '/cosma7/data/dp004/dc-seey1/data/flares/steve/'
+indir = '/cosma7old/data/dp004/dc-payy1/my_files/flares_pipeline/data/'
+# indir = '/cosma7/data/dp004/dc-seey1/data/flares/steve/'
 
-outdir = '/cosma/home/dp004/dc-wilk2/data/flare/simulations/flares/'
+outdir = '/cosma/home/dp004/dc-wilk2/scratch/'
 
 
 
 fs = h5py.File(indir + 'flares.hdf5', 'r')
-fd = h5py.File(outdir + 'flares_noparticlesed_v3.hdf5', 'w')
+fd = h5py.File(outdir + 'flares_bh.hdf5', 'w')
 
 # testing
 sims = ['00']
