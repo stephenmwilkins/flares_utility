@@ -24,12 +24,14 @@ for sim in sims:
     fd.create_group(f'{sim}')
     for tag in tags:
         print(sim, tag)
+        
         fd.create_group(f'{sim}/{tag}')
-        fs.copy(f'{sim}/{tag}/Galaxy', fd[f'{sim}/{tag}'])
-        del fd[f'{sim}/{tag}/Galaxy/BPASS_2.2.1/Chabrier300/SED']
+
+        fd.create_group(f'{sim}/{tag}/Galaxy')
+        for k in ['Mbh', 'Mstar', 'Mdm']:
+            fs.copy(f'{sim}/{tag}/Galaxy/{k}', fd[f'{sim}/{tag}/Galaxy'])
 
         fd.create_group(f'{sim}/{tag}/Particle')
-        print(len(fs['{sim}/{tag}/Particle/BH_ID'][()]))
         for k in ['BH_Age', 'BH_Coordinates', 'BH_ID', 'BH_Index', 'BH_Mass', 'BH_Mdot', 'BH_los', 'BH_sml']:
             fs.copy(f'{sim}/{tag}/Particle/{k}', fd[f'{sim}/{tag}/Particle'])
 
