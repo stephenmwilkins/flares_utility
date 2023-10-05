@@ -19,9 +19,9 @@ tags = ['008_z007p000']
 
 # sims = []
 
-sims = list(fd.keys())
-tags = list(fd[sims[0]].keys())
+sims = list(fs.keys())
 print(sims)
+tags = list(fs[sims[0]].keys())
 print(tags)
 
 for sim in sims:
