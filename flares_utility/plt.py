@@ -5,7 +5,7 @@ from . import labels as labels_
 from . import limits as limits_
 from . import stats
 import flare.plt as fplt
-from flare.photom import log10lum_to_M
+# from flare.photom import log10lum_to_M
 import cmasher as cmr
 from scipy.stats import pearsonr
 import numpy as np
@@ -555,7 +555,7 @@ def linear2(D, y, properties, s, labels=labels, limits=limits, scatter_colour_qu
     return fig
 
 
-def vlinear(D, x, properties, s, labels=labels, limits=limits, scatter_colour_quantity=False, scatter_cmap=None, bins=20, full_width=True, add_weighted_median=True, weighted_median_outline=False, add_correlation_coefficient=False, weighted=True):
+def vlinear(D, x, properties, s, labels=labels, limits=limits, scatter_colour_quantity=False, scatter_cmap=None, bins=20, full_width=True, add_weighted_median=True, weighted_median_outline=False, add_correlation_coefficient=False, weighted=True, horizontal=False):
     """ as above but stacked vertically """
 
     z = scatter_colour_quantity
@@ -588,10 +588,19 @@ def vlinear(D, x, properties, s, labels=labels, limits=limits, scatter_colour_qu
     bottom = 0.075
     right = 0.95
 
+    if Nx == 1:
+        left = 0.175
+        top = 0.80
+        bottom = 0.2
+        right = 0.95
+
     panel_width = (right-left)/Nx
     panel_height = (top-bottom)
 
     fig, axes = plt.subplots(Nx, 1, figsize=(3.5, np.max([Nx*2, 7.])), sharex=True)
+
+    if Nx == 1:
+        axes = [axes]
 
     plt.subplots_adjust(left=left, top=top, bottom=bottom, right=right, wspace=0.0, hspace=0.0)
 
@@ -638,12 +647,12 @@ def vlinear(D, x, properties, s, labels=labels, limits=limits, scatter_colour_qu
         cmapper = cm.ScalarMappable(norm=norm, cmap=cmap)
         cmapper.set_array([])
 
-        cax = fig.add_axes([left, top, right-left, 0.02])
-        fig.colorbar(cmapper, cax=cax, orientation='horizontal')
-        cax.set_xlabel(rf'$\rm {labels[scatter_colour_quantity]} $', fontsize=7)
-        cax.tick_params(axis='x', labelsize=6)
-        cax.xaxis.set_label_position('top')
-        cax.xaxis.tick_top()
+        # cax = fig.add_axes([left, top, right-left, 0.02])
+        # fig.colorbar(cmapper, cax=cax, orientation='horizontal')
+        # cax.set_xlabel(rf'$\rm {labels[scatter_colour_quantity]} $', fontsize=7)
+        # cax.tick_params(axis='x', labelsize=6)
+        # cax.xaxis.set_label_position('top')
+        # cax.xaxis.tick_top()
 
     return fig, axes
 
@@ -870,12 +879,34 @@ def linear_redshift(D, zeds, x, y, s, labels=labels, limits=limits, nbins=nbins,
     if add_zevo:
         Npanels += 1
 
-    if single_column:
-        fig, axes, (left, right, top, bottom) = fplt.multiple_small(
-            Npanels, rows=rows, flatten=False)
-    else:
-        fig, axes, (left, right, top, bottom) = fplt.multiple(
-            Npanels, rows=rows, flatten=False)
+    # if single_column:
+    #     fig, axes, (left, right, top, bottom) = fplt.multiple_small(
+    #         Npanels, rows=rows, flatten=False)
+    # else:
+    #     fig, axes, (left, right, top, bottom) = fplt.multiple(
+    #         Npanels, rows=rows, flatten=False)
+
+    left = 0.1
+    top = 0.95
+    bottom = 0.1
+    right = 0.95
+    wspace = 0.0
+    hspace = 0.1
+
+    Ny = rows
+    Nx = int(Npanels/rows)
+
+    panel_width = (right-left)/Nx
+    panel_height = (top-bottom)/Ny
+
+    fig, axes = plt.subplots(Ny, Nx, figsize=(7, 7/(panel_height/panel_width)), sharey='row')
+    plt.subplots_adjust(left=left,
+                        bottom=bottom, 
+                        right=right, 
+                        top=top, 
+                        wspace=wspace, 
+                        hspace=hspace)
+
 
     if add_zevo:
         ax_zevo = axes[j, -1]
@@ -914,6 +945,15 @@ def linear_redshift(D, zeds, x, y, s, labels=labels, limits=limits, nbins=nbins,
         if rows == 3:
             ax.text(0.5, 1.01, rf'$\rm z={z:.0f}$', horizontalalignment='center',
                     verticalalignment='bottom', transform=ax.transAxes, fontsize=8)
+
+    if rows == 2:
+        for ax in axes[0,:]:
+            ax.set_xticklabels([])
+    if rows == 3:
+        for ax in axes[0,:]:
+            ax.set_xticklabels([])
+        for ax in axes[1,:]:
+            ax.set_xticklabels([])
 
     # --- add final redshift trend to all plots
     if lowz and add_weighted_median:
