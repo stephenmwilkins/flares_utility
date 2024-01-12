@@ -35,7 +35,7 @@ with h5py.File(output_file, 'w') as hf:
             bh_history = details.loc[mask].sort_values('Time')
             hf[f'{sim}/{PID}/a'] = bh_history['Time']
             hf[f'{sim}/{PID}/z'] = (1. / bh_history['Time']) - 1
-            hf[f'{sim}/{PID}/aou'] = cosmo.age(bh_history['z']).value
+            hf[f'{sim}/{PID}/aou'] = cosmo.age(hf[f'{sim}/{PID}/z'][()]).value
             for col in ['BH_Particle_Mass', 'BH_Subgrid_Mass', 'Mdot']:
                 hf[f'{sim}/{PID}/{col}'] = bh_history[col]
 
