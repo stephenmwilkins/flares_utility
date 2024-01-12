@@ -1,3 +1,6 @@
 astropy
 numpy
 matplotlib
+h5py
+unyt
+pandas
