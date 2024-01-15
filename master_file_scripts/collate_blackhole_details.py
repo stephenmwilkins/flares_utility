@@ -34,6 +34,8 @@ with h5py.File(output_file, 'w') as hf:
             mask = details['PID'] == PID
             bh = details.loc[mask].sort_values('Time')
             hf[f'{sim}/{PID}/a'] = bh['Time']
+            hf[f'{sim}/{PID}/metallicity'] = bh['Metallicity']
+            hf[f'{sim}/{PID}/timestep'] = bh['Timestep']
             hf[f'{sim}/{PID}/z'] = (1. / bh['Time']) - 1
             # hf[f'{sim}/{PID}/aou'] = cosmo.age(hf[f'{sim}/{PID}/z'][()]).value
             for col in ['BH_Particle_Mass', 'BH_Subgrid_Mass', 'Mdot']:
