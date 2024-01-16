@@ -30,6 +30,9 @@ with h5py.File(f'{output_path}/bhmergers.h5', 'w') as hf:
         masses_primary = np.load(data_path + '/masses_primary_' + str(region) + '.npy')
         masses_secondary = np.load(data_path + '/masses_secondary_' + str(region) + '.npy')
 
+        print(region, len(a))
+
+
         # Convert the data into arrays of floats. #
         a = np.array(a, dtype=float)
         ids_primary = np.array(ids_primary, dtype=int)
